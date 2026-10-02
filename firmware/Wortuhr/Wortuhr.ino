@@ -61,6 +61,28 @@ void clearBootCounter() {
   ESP.rtcUserMemoryWrite(0, (uint32_t *)&b, sizeof(b));
 }
 
+// ---------- update boot: the firmware download needs ~30 KB heap, so it runs in a reboot
+// without web server / mDNS / OTA / portal. Request and result travel through RTC memory.
+struct RtcText { uint32_t magic; char text[64]; };
+static const uint32_t RTC_UPD_REQ = 0x55504451, RTC_UPD_RES = 0x55504452;
+static const uint32_t RTC_OFS_REQ = 2, RTC_OFS_RES = 2 + sizeof(RtcText) / 4;
+
+void rtcPut(uint32_t ofs, uint32_t magic, const String &s) {
+  RtcText r = {magic, {0}};
+  strncpy(r.text, s.c_str(), sizeof(r.text) - 1);
+  ESP.rtcUserMemoryWrite(ofs, (uint32_t *)&r, sizeof(r));
+}
+bool rtcTake(uint32_t ofs, uint32_t magic, String &out) {
+  RtcText r;
+  ESP.rtcUserMemoryRead(ofs, (uint32_t *)&r, sizeof(r));
+  if (r.magic != magic) return false;
+  r.text[sizeof(r.text) - 1] = 0;
+  out = r.text;
+  r.magic = 0;
+  ESP.rtcUserMemoryWrite(ofs, (uint32_t *)&r, sizeof(r));
+  return true;
+}
+
 // ---------- helpers ----------
 RgbColor rgb(uint32_t c) { return RgbColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF); }
 
@@ -200,6 +222,7 @@ void handleState() {
   st["latest"] = gh.latest;
   st["updAvail"] = gh.available();
   st["updErr"] = gh.error;
+  st["updHeap"] = gh.heapAtConnect;
   String out;
   serializeJson(doc, out);
   server.send(200, "application/json", out);
@@ -304,16 +327,43 @@ void wifiLoop() {
   }
 }
 
-void installUpdate() {
+void installUpdate() {  // normal mode: hand over to the update boot
   if (!gh.available()) return;
-  Serial.printf("[upd] installing %s\n", gh.latest.c_str());
-  gh.install([](int done, int total) {
-    fillCorners(RgbColor(0));
-    for (uint16_t i = 0; i < (uint32_t)NUM_LEDS * done / max(total, 1); i++) frame[i] = RgbColor(0, 0, 255);
-    display.setLevel(60); display.setFrame(frame); display.loop();
-  });
-  Serial.printf("[upd] failed: %s\n", gh.error.c_str());
-  forceRecolor = true;
+  Serial.printf("[upd] rebooting to install %s\n", gh.latest.c_str());
+  if (saveAt) cfg.save();
+  rtcPut(RTC_OFS_REQ, RTC_UPD_REQ, gh.latest);
+  delay(50);
+  ESP.restart();
+}
+
+void showProgress(int done, int total) {
+  fillCorners(RgbColor(0));
+  for (uint16_t i = 0; i < (uint32_t)NUM_LEDS * done / max(total, 1); i++) frame[i] = RgbColor(0, 0, 255);
+  display.setLevel(60); display.setFrame(frame); display.loop();
+}
+
+void runUpdateBoot(const String &version) {
+  clearBootCounter();  // a deliberate reboot, not a crash
+  Serial.printf("[upd] update boot -> %s\n", version.c_str());
+  display.begin();
+  showProgress(0, 1);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin();  // credentials saved by WiFiManager
+  uint32_t t0 = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - t0 < 40000) { delay(100); statusPulse(0x0040FF); display.loop(); }
+  configTime(TZ_BERLIN, "de.pool.ntp.org", "pool.ntp.org");
+  t0 = millis();
+  while (time(nullptr) < 1700000000 && millis() - t0 < 30000) { delay(100); statusPulse(0x0040FF); display.loop(); }
+  gh.latest = version;
+  if (WiFi.status() != WL_CONNECTED) gh.error = "no WiFi";
+  else {
+    Serial.printf("[upd] heap before download %u\n", ESP.getFreeHeap());
+    gh.install(showProgress);  // reboots on success
+  }
+  Serial.printf("[upd] failed: %s heap@connect=%u\n", gh.error.c_str(), gh.heapAtConnect);
+  rtcPut(RTC_OFS_RES, RTC_UPD_RES, gh.error);
+  delay(50);
+  ESP.restart();
 }
 
 // ---------- serial console: "dump" prints every phrase for the current options ----------
@@ -345,6 +395,9 @@ void serialConsole() {
 void setup() {
   Serial.begin(115200);
   Serial.printf("\n\n%s %s\n", FW_NAME, FW_VERSION);
+  String updVersion, updResult;
+  if (rtcTake(RTC_OFS_REQ, RTC_UPD_REQ, updVersion)) runUpdateBoot(updVersion);  // never returns
+  if (rtcTake(RTC_OFS_RES, RTC_UPD_RES, updResult)) { gh.error = "Update: " + updResult; gh.checked = true; }
   rescue = bumpBootCounter() >= 3;
   if (!LittleFS.begin()) { LittleFS.format(); LittleFS.begin(); }
   if (!rescue) cfg.load();
@@ -401,8 +454,11 @@ void loop() {
   if (servicesUp && (pendingCheck || (nextCheckAt && millis() > nextCheckAt))) {
     pendingCheck = false;
     nextCheckAt = millis() + 24UL * 3600 * 1000;
+    MDNS.end();  // a TLS session with 16 KB records needs every free byte
     gh.check();
-    Serial.printf("[upd] latest=%s err=%s heap=%u\n", gh.latest.c_str(), gh.error.c_str(), ESP.getFreeHeap());
+    MDNS.begin(HOSTNAME);
+    MDNS.addService("http", "tcp", 80);
+    Serial.printf("[upd] latest=%s err=%s heap@connect=%u heap=%u\n", gh.latest.c_str(), gh.error.c_str(), gh.heapAtConnect, ESP.getFreeHeap());
   }
   if (servicesUp && pendingInstall) { pendingInstall = false; installUpdate(); }
   if (servicesUp && cfg.autoUpdate && gh.available() && millis() - lastAutoTry > 3600000UL) {

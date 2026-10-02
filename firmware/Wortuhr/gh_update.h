@@ -31,12 +31,16 @@ struct GhUpdate {
     std::unique_ptr<BearSSL::X509List> cas;
     std::unique_ptr<BearSSL::WiFiClientSecure> client;
     if (!secureClient(cas, client)) return false;
+    // GitHub's handshake records are <= ~4 KB and version.json is tiny, so 8 KB fits next to the
+    // running web server. The firmware download (16 KB records) runs in the lean update boot instead.
+    client->setBufferSizes(8192, 512);
     HTTPClient http;
     http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
     http.setTimeout(10000);
     if (!http.begin(*client, "https://github.com/" FW_REPO "/releases/latest/download/version.json")) { error = "begin"; return false; }
+    heapAtConnect = ESP.getFreeHeap();
     int code = http.GET();
-    if (code != HTTP_CODE_OK) { error = code < 0 ? http.errorToString(code) : "HTTP " + String(code); http.end(); return false; }
+    if (code != HTTP_CODE_OK) { error = code < 0 ? http.errorToString(code) + sslError(*client) : "HTTP " + String(code); http.end(); return false; }
     JsonDocument doc;
     DeserializationError e = deserializeJson(doc, http.getString());
     http.end();
@@ -55,12 +59,21 @@ struct GhUpdate {
     ESPhttpUpdate.rebootOnUpdate(true);
     ESPhttpUpdate.onProgress(progress);
     String url = "https://github.com/" FW_REPO "/releases/download/v" + latest + "/" FW_ASSET;
+    heapAtConnect = ESP.getFreeHeap();
     t_httpUpdate_return r = ESPhttpUpdate.update(*client, url);
-    if (r != HTTP_UPDATE_OK) { error = ESPhttpUpdate.getLastErrorString(); return false; }
+    if (r != HTTP_UPDATE_OK) { error = ESPhttpUpdate.getLastErrorString() + sslError(*client); return false; }
     return true;
   }
 
+  uint32_t heapAtConnect = 0;
+
 private:
+  static String sslError(BearSSL::WiFiClientSecure &c) {
+    char b[80];
+    int e = c.getLastSSLError(b, sizeof(b));
+    return e ? " (TLS " + String(e) + ": " + b + ")" : "";
+  }
+
   bool secureClient(std::unique_ptr<BearSSL::X509List> &cas, std::unique_ptr<BearSSL::WiFiClientSecure> &client) {
     time_t now = time(nullptr);
     if (now < 1700000000) { error = "no time yet"; return false; }  // certificate dates need a valid clock

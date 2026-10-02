@@ -10,14 +10,12 @@ import re
 import subprocess
 import sys
 
+# Keep this list short: every root costs ~1.5 KB of heap during the TLS handshake,
+# and the ESP8266 needs ~30 KB free for a 16 KB-record connection (GitHub has no MFLN).
 ROOTS = [
-    'USERTrust ECC Certification Authority',
-    'USERTrust RSA Certification Authority',
-    'Sectigo Public Server Authentication Root E46',
-    'Sectigo Public Server Authentication Root R46',
-    'ISRG Root X1',
-    'ISRG Root X2',
-    'DigiCert Global Root G2',
+    'USERTrust ECC Certification Authority',          # github.com (Sectigo E36 -> E46 -> USERTrust ECC)
+    'Sectigo Public Server Authentication Root E46',  # same chain if GitHub stops sending the cross-cert
+    'ISRG Root X1',                                   # release-assets CDN (Let's Encrypt)
 ]
 
 bundle = open(sys.argv[1], encoding='utf-8', errors='replace').read()
