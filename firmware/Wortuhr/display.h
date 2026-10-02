@@ -50,19 +50,21 @@ public:
     uint32_t sum = 0;
     for (uint16_t i = 0; i < NUM_LEDS; i++) {
       RgbColor c = cur[i].Dim(level);
-      out[i] = c;
       sum += (uint32_t)c.R + c.G + c.B;
     }
     uint32_t ma = sum * 20 / 255;
     uint8_t scale = 255;
     if (limitMa && ma > limitMa) scale = (uint32_t)limitMa * 255 / ma;
-    for (uint16_t i = 0; i < NUM_LEDS; i++) strip.SetPixelColor(i, scale < 255 ? out[i].Dim(scale) : out[i]);
+    for (uint16_t i = 0; i < NUM_LEDS; i++) {
+      RgbColor c = cur[i].Dim(level);
+      strip.SetPixelColor(i, scale < 255 ? c.Dim(scale) : c);
+    }
     lastCurrentMa = (uint32_t)ma * scale / 255;
     strip.Show();
   }
 
 private:
-  RgbColor cur[NUM_LEDS], from[NUM_LEDS], to[NUM_LEDS], out[NUM_LEDS];
+  RgbColor cur[NUM_LEDS], from[NUM_LEDS], to[NUM_LEDS];
   uint32_t fadeStart = 0;
   uint16_t fadeMs = 0, limitMa = 1500, lastCurrentMa = 0;
   uint8_t level = 128;

@@ -1,8 +1,14 @@
 # Ständer mit verstecktem NodeMCU
 
+- `wortuhr-stand_v5.stl` / `.step` – wie v4, zusätzlich Fenster für einen 0,91"-OLED (SSD1306 128×32) oben in der
+  schrägen Rückwand: Tasche 39 × 12,2 × 1,7 mm von innen, Fenster 24 × 8,2 mm mit Fase 0,5 mm, 0,8 mm Haut,
+  Wand überall 2,5 mm (kein Rahmen; das Modul steht innen ~0,8 mm über). Maße aus dem Reflex-Deckel.
+  Modul mit einem Tropfen Kleber oder Klebeband sichern. Außerdem: keine Fasen an den Stirnkanten, die an der
+  Uhr anliegen (Rückseite, Auflage, Vorderkante bündig mit der Front), 6-mm-Fase an der oberen Innenkante der
+  Schraubenblöcke.
 - `wortuhr-stand_v4.stl` – druckfertig, liegt so auf dem Druckbett, wie er auf dem Tisch steht (keine Stützen nötig)
 - `wortuhr-stand_v4.step` – zum Weiterbearbeiten
-- `fusion-scripts/` – Fusion-360-Skripte, die das Modell erzeugen (`v4_build.py`) und die Passung prüfen (`chk_v4.py`)
+- `fusion-scripts/` – Fusion-360-Skripte, die das Modell erzeugen (`v4_build.py`, `v5_chamfer.py`, `v5_screen.py`) und die Passung prüfen (`chk_v4.py`, `chk_v5.py`)
 
 **Maße:** 194 × 50 × 56 mm, Uhr 10° nach hinten geneigt, Vorderseite bündig mit der Front der Uhr.
 

@@ -40,6 +40,14 @@ details summary{cursor:pointer;color:var(--mut);padding:6px 0}
 <div class="row"><label data-t="to">Bis</label><input id="nightTo" type="time"></div>
 <div class="row"><label data-t="nightB">Helligkeit nachts (0 = aus)</label><input id="nightBrightness" type="range" min="0" max="100"></div></div>
 
+<div class="card" id="oledCard" hidden><h2 data-t="scr">Bildschirm im Ständer</h2>
+<div class="row"><label data-t="scrOn">Nach dem Einschalten an</label><select id="oledMin">
+<option value="0" data-t="off">Aus</option><option value="1">1 min</option><option value="2">2 min</option><option value="5">5 min</option>
+<option value="10">10 min</option><option value="30">30 min</option><option value="60">60 min</option><option value="255" data-t="always">Immer</option></select></div>
+<div class="row"><label data-t="scrAfter">Danach</label><select id="oledAfter"><option value="0" data-t="off">Aus</option><option value="1" data-t="exact">Genaue Uhrzeit</option></select></div>
+<div class="row"><label data-t="scrFlip">Bildschirm drehen</label><input id="oledFlip" type="checkbox"></div>
+<p class="mut" data-t="scrNote">Fehler, WLAN-Einrichtung und Updates werden immer angezeigt.</p></div>
+
 <div class="card"><h2 data-t="sys">System</h2>
 <div class="row"><span data-t="ver">Version</span><span id="ver"></span></div>
 <div class="row"><span data-t="upd">Update</span><span id="upd" class="mut"></span></div>
@@ -68,8 +76,8 @@ details summary{cursor:pointer;color:var(--mut);padding:6px 0}
 <script>
 const T={
 de:{},
-ru:{disp:"Отображение",bright:"Яркость",colors:"Цвета",cRand:"Случайные",cOne:"Один цвет",color:"Цвет",minuten:"Показывать слово «MINUTEN»",heart:"Сердце в начале часа",reroll:"Новые цвета",heartNow:"Показать сердце",night:"Ночной режим",nightOn:"Приглушать ночью",from:"С",to:"До",nightB:"Яркость ночью (0 = выкл.)",sys:"Система",ver:"Версия",upd:"Обновление",check:"Проверить обновление",install:"Установить обновление",adv:"Расширенные настройки",v20:"В :20",v40:"В :40",esist:"Всегда показывать «ES IST»",fade:"Плавная смена",tz:"Часовой пояс",ntp:"Сервер времени",limit:"Лимит тока светодиодов (мА)",auto:"Ставить обновления автоматически (ночью)",net:"Сеть",test:"Тест светодиодов",upload:"Загрузить прошивку",reboot:"Перезагрузка",wifi:"Забыть Wi-Fi",factory:"Сброс настроек",saved:"Сохранено",sure:"Точно?",upToDate:"Актуальная версия",avail:"Доступна версия ",never:"ещё не проверялось",err:"Ошибка: "},
-en:{disp:"Display",bright:"Brightness",colors:"Colours",cRand:"Random",cOne:"Single colour",color:"Colour",minuten:"Show the word “MINUTEN”",heart:"Heart at the full hour",reroll:"New colours",heartNow:"Show heart",night:"Night mode",nightOn:"Dim at night",from:"From",to:"To",nightB:"Night brightness (0 = off)",sys:"System",ver:"Version",upd:"Update",check:"Check for update",install:"Install update",adv:"Advanced settings",v20:"At :20",v40:"At :40",esist:"Always show “ES IST”",fade:"Smooth fade",tz:"Time zone",ntp:"Time server",limit:"LED current limit (mA)",auto:"Install updates automatically (at night)",net:"Network",test:"LED test",upload:"Upload firmware",reboot:"Restart",wifi:"Forget WiFi",factory:"Factory reset",saved:"Saved",sure:"Are you sure?",upToDate:"Up to date",avail:"Available: ",never:"not checked yet",err:"Error: "}};
+ru:{disp:"Отображение",bright:"Яркость",colors:"Цвета",cRand:"Случайные",cOne:"Один цвет",color:"Цвет",minuten:"Показывать слово «MINUTEN»",heart:"Сердце в начале часа",reroll:"Новые цвета",heartNow:"Показать сердце",night:"Ночной режим",nightOn:"Приглушать ночью",from:"С",to:"До",nightB:"Яркость ночью (0 = выкл.)",sys:"Система",ver:"Версия",upd:"Обновление",check:"Проверить обновление",install:"Установить обновление",adv:"Расширенные настройки",v20:"В :20",v40:"В :40",esist:"Всегда показывать «ES IST»",fade:"Плавная смена",tz:"Часовой пояс",ntp:"Сервер времени",limit:"Лимит тока светодиодов (мА)",auto:"Ставить обновления автоматически (ночью)",net:"Сеть",test:"Тест светодиодов",upload:"Загрузить прошивку",reboot:"Перезагрузка",wifi:"Забыть Wi-Fi",factory:"Сброс настроек",saved:"Сохранено",sure:"Точно?",upToDate:"Актуальная версия",avail:"Доступна версия ",never:"ещё не проверялось",err:"Ошибка: ",scr:"Экран в подставке",scrOn:"Горит после включения",scrAfter:"Потом",scrFlip:"Повернуть экран",off:"Выкл.",always:"Всегда",exact:"Точное время",scrNote:"Ошибки, настройка Wi-Fi и обновления показываются всегда."},
+en:{disp:"Display",bright:"Brightness",colors:"Colours",cRand:"Random",cOne:"Single colour",color:"Colour",minuten:"Show the word “MINUTEN”",heart:"Heart at the full hour",reroll:"New colours",heartNow:"Show heart",night:"Night mode",nightOn:"Dim at night",from:"From",to:"To",nightB:"Night brightness (0 = off)",sys:"System",ver:"Version",upd:"Update",check:"Check for update",install:"Install update",adv:"Advanced settings",v20:"At :20",v40:"At :40",esist:"Always show “ES IST”",fade:"Smooth fade",tz:"Time zone",ntp:"Time server",limit:"LED current limit (mA)",auto:"Install updates automatically (at night)",net:"Network",test:"LED test",upload:"Upload firmware",reboot:"Restart",wifi:"Forget WiFi",factory:"Factory reset",saved:"Saved",sure:"Are you sure?",upToDate:"Up to date",avail:"Available: ",never:"not checked yet",err:"Error: ",scr:"Display in the stand",scrOn:"On after power-up",scrAfter:"Afterwards",scrFlip:"Rotate display",off:"Off",always:"Always",exact:"Exact time",scrNote:"Errors, WiFi setup and updates are always shown."}};
 const DE={saved:"Gespeichert",sure:"Sicher?",upToDate:"Aktuell",avail:"Verfügbar: ",never:"noch nicht geprüft",err:"Fehler: "};
 let cfg={},lang="de",timer;const $=id=>document.getElementById(id);
 const tr=k=>(T[lang]&&T[lang][k])||DE[k]||k;
@@ -90,7 +98,7 @@ if(!Object.keys(cfg).length){cfg=s.cfg;lang=cfg.lang||"de";applyLang();fill()}
 $("clock").textContent=s.st.synced?s.st.time+" · "+s.st.date:"…";$("ver").textContent=s.st.ver;
 $("net").textContent=s.st.ssid+" · "+s.st.ip+" · "+s.st.rssi+" dBm";
 $("upd").textContent=s.st.updErr?tr("err")+s.st.updErr:!s.st.checked?tr("never"):s.st.updAvail?tr("avail")+s.st.latest:tr("upToDate");
-$("installBtn").hidden=!s.st.updAvail}catch(e){}}
+$("installBtn").hidden=!s.st.updAvail;$("oledCard").hidden=!s.st.oled}catch(e){}}
 document.querySelectorAll("input,select").forEach(e=>e.addEventListener(e.type=="range"?"input":"change",save));
 document.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",async ev=>{ev.preventDefault();if(b.dataset.c&&!confirm(tr("sure")))return;
 await fetch("/api/action",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"a="+b.dataset.a});setTimeout(state,b.dataset.a=="check"?4000:300)}));

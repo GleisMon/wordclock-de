@@ -23,12 +23,16 @@ struct Settings {
   uint16_t limitMa = 1500;        // LED current budget (2 A supply - ESP8266 reserve)
   bool autoUpdate = false;
   String lang = "de";             // web UI language
+  uint8_t oledMin = 5;            // stand display: minutes on after power-up (0 = off, 255 = always)
+  uint8_t oledAfter = 0;          // after that: 0 = off, 1 = exact time
+  bool oledFlip = false;          // module mounted the other way round
 
   void toJson(JsonObject o) const {
     o["brightness"] = brightness; o["nightOn"] = nightOn; o["nightFrom"] = nightFrom; o["nightTo"] = nightTo;
     o["nightBrightness"] = nightBrightness; o["minuten"] = minuten; o["v20"] = v20; o["v40"] = v40;
     o["esIstAlways"] = esIstAlways; o["heart"] = heart; o["colorMode"] = colorMode; o["color"] = color;
     o["fade"] = fade; o["tz"] = tz; o["ntp"] = ntp; o["limitMa"] = limitMa; o["autoUpdate"] = autoUpdate; o["lang"] = lang;
+    o["oledMin"] = oledMin; o["oledAfter"] = oledAfter; o["oledFlip"] = oledFlip;
   }
 
   void fromJson(JsonObjectConst o) {
@@ -49,6 +53,10 @@ struct Settings {
     if (o["ntp"].is<const char *>() && strlen(o["ntp"]) > 0 && strlen(o["ntp"]) < 60) ntp = o["ntp"].as<const char *>();
     limitMa = constrain((int)(o["limitMa"] | limitMa), 300, 3000);
     autoUpdate = o["autoUpdate"] | autoUpdate;
+    int om = o["oledMin"] | (int)oledMin;
+    oledMin = om >= 255 ? 255 : constrain(om, 0, 60);
+    oledAfter = (o["oledAfter"] | oledAfter) ? 1 : 0;
+    oledFlip = o["oledFlip"] | oledFlip;
     if (o["lang"].is<const char *>()) { String l = o["lang"].as<const char *>(); if (l == "de" || l == "ru" || l == "en") lang = l; }
   }
 

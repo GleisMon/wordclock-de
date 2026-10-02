@@ -18,6 +18,7 @@
 #include "settings.h"
 #include "gh_update.h"
 #include "webui.h"
+#include "screen.h"
 
 static const char *HOSTNAME = "wortuhr";
 static const char *AP_SETUP = "Wortuhr-Setup";
@@ -31,6 +32,28 @@ GhUpdate gh;
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
 WiFiManager wm;
+Screen screen;
+
+enum Anim { A_NONE, A_HEART, A_TEST } anim = A_NONE;  // before the first function (Arduino prototypes)
+uint32_t animStart = 0;
+
+// ---------- texts for the optional stand display ----------
+enum Txt { S_SETUP, S_WEB, S_NOWIFI, S_RETRY, S_NOTIME, S_RESCUE, S_UPDFAIL, S_UPDAVAIL, S_CONNECT, S_UPLOAD, S_RESTART, S_COUNT };
+// one '\0'-separated block per language in flash (string constants would otherwise sit in RAM)
+static const char TXT_DE[] PROGMEM =
+  "WLAN einrichten:\0Einstellungen im Browser:\0Kein WLAN\0verbinde neu ...\0Keine Uhrzeit\0Rettungsmodus - WLAN:\0"
+  "Update fehlgeschlagen\0Update verfügbar: \0verbinde ...\0Firmware-Upload\0Neustart ...";
+static const char TXT_EN[] PROGMEM =
+  "Set up WiFi:\0Settings in the browser:\0No WiFi\0reconnecting ...\0No time\0Rescue mode - WiFi:\0"
+  "Update failed\0Update available: \0connecting ...\0Firmware upload\0restarting ...";
+static const char TXT_RU[] PROGMEM =
+  "Настройка Wi-Fi:\0Настройки в браузере:\0Нет Wi-Fi\0переподключение ...\0Нет времени\0Аварийный режим, Wi-Fi:\0"
+  "Обновление не удалось\0Есть обновление: \0подключение ...\0Загрузка прошивки\0перезагрузка ...";
+String T(Txt k) {
+  const char *p = cfg.lang == "en" ? TXT_EN : cfg.lang == "ru" ? TXT_RU : TXT_DE;
+  for (uint8_t i = 0; i < k; i++) p += strlen_P(p) + 1;
+  return String(FPSTR(p));
+}
 
 bool rescue = false, routesReady = false, servicesUp = false, portalOn = false, otaReady = false;
 uint32_t portalSince = 0, staRetryAt = 0, lostSince = 0, saveAt = 0, nextCheckAt = 0, rebootAt = 0, lastAutoTry = 0;
@@ -40,8 +63,6 @@ int lastHeartHour = -1;
 uint32_t wordColor[W_COUNT];
 RgbColor wordFrame[NUM_LEDS], frame[NUM_LEDS];
 
-enum Anim { A_NONE, A_HEART, A_TEST } anim = A_NONE;
-uint32_t animStart = 0;
 
 // ---------- rescue mode: 3 boots in a row that die within 30 s ----------
 struct RtcBoot { uint32_t magic, count; };
@@ -194,8 +215,35 @@ void tick() {
   }
 }
 
+// ---------- stand display: what to show, most important first ----------
+void screenLoop() {
+  if (!screen.present) return;
+  if (rescue) { screen.text(T(S_RESCUE), AP_RESCUE, "192.168.4.1/update"); return; }
+  if (portalOn) { screen.text(T(S_SETUP), AP_SETUP, "192.168.4.1"); return; }
+  time_t now = time(nullptr);
+  bool valid = now > 1700000000, up = WiFi.status() == WL_CONNECTED;
+  struct tm t = {};
+  if (valid) localtime_r(&now, &t);
+  bool night = valid && inNight(t.tm_hour * 60 + t.tm_min);
+  if (!up && lostSince && millis() - lostSince > 20000) { screen.text(T(S_NOWIFI), WiFi.SSID(), T(S_RETRY), night ? 12 : 160); return; }
+  if (up && !valid && millis() > 60000) { screen.text(T(S_NOTIME), "NTP", cfg.ntp, night ? 12 : 160); return; }
+  bool infoTime = cfg.oledMin == 255 || millis() < cfg.oledMin * 60000UL;
+  if (infoTime && !night) {
+    String foot = "wortuhr.local";
+    if (gh.error.startsWith("Update")) foot = T(S_UPDFAIL);
+    else if (gh.available()) foot = T(S_UPDAVAIL) + gh.latest;
+    else if (valid) { char b[8]; snprintf(b, sizeof(b), "  %02d:%02d", t.tm_hour, t.tm_min); foot += b; }
+    screen.text(T(S_WEB), up ? WiFi.localIP().toString() : T(S_CONNECT), foot);
+    return;
+  }
+  if (cfg.oledAfter == 1 && valid && !night) { screen.clock(t.tm_hour, t.tm_min); return; }
+  screen.off();
+}
+
 // ---------- web ----------
 void applyConfig(const Settings &old) {
+  screen.setFlip(cfg.oledFlip);
+  screen.setLang(cfg.lang);
   display.setLimit(cfg.limitMa);
   if (old.tz != cfg.tz || old.ntp != cfg.ntp) configTime(cfg.tz.c_str(), cfg.ntp.c_str(), "pool.ntp.org");
   if (old.colorMode != cfg.colorMode || (cfg.colorMode == 1 && old.color != cfg.color)) forceRecolor = true;
@@ -226,6 +274,7 @@ void handleState() {
   st["updErr"] = gh.error;
   st["updHeap"] = gh.heapAtConnect;
   st["updBlock"] = gh.blockAtConnect;
+  st["oled"] = screen.present;
   String out;
   serializeJson(doc, out);
   server.send(200, "application/json", out);
@@ -278,11 +327,7 @@ void startServices() {
   MDNS.addService("http", "tcp", 80);
   if (!otaReady) {
     ArduinoOTA.setHostname(HOSTNAME);
-    ArduinoOTA.onProgress([](unsigned int done, unsigned int total) {
-      fillCorners(RgbColor(0));
-      for (uint16_t i = 0; i < (uint32_t)NUM_LEDS * done / total; i++) frame[i] = RgbColor(0, 0, 255);
-      display.setLevel(60); display.setFrame(frame); display.loop();
-    });
+    ArduinoOTA.onProgress([](unsigned int done, unsigned int total) { uploadProgress(done, total); });
     ArduinoOTA.begin();
     otaReady = true;
   }
@@ -343,16 +388,27 @@ void installUpdate() {  // normal mode: hand over to the update boot
   f.print(url);
   f.close();
   Serial.printf("[upd] rebooting to install %s\n", gh.latest.c_str());
+  screen.text("Update " + gh.latest, T(S_RESTART), "");
   if (saveAt) cfg.save();
   rtcPut(RTC_OFS_REQ, RTC_UPD_REQ, gh.latest);
   delay(50);
   ESP.restart();
 }
 
-void showProgress(int done, int total) {
+void ledProgress(int done, int total) {
   fillCorners(RgbColor(0));
   for (uint16_t i = 0; i < (uint32_t)NUM_LEDS * done / max(total, 1); i++) frame[i] = RgbColor(0, 0, 255);
   display.setLevel(60); display.setFrame(frame); display.loop();
+}
+
+void uploadProgress(size_t done, size_t total) {  // web upload / ArduinoOTA
+  ledProgress(done, total);
+  screen.progress(T(S_UPLOAD), done, total);
+}
+
+void showProgress(int done, int total) {  // GitHub update (update boot)
+  ledProgress(done, total);
+  screen.progress("Update " + gh.latest, done, total);
 }
 
 void runUpdateBoot(const String &version) {
@@ -363,10 +419,15 @@ void runUpdateBoot(const String &version) {
     File f = LittleFS.open("/upd.url", "r");
     if (f) { url = f.readString(); f.close(); }
     LittleFS.remove("/upd.url");
+    cfg.load();  // display orientation and language only
     LittleFS.end();  // give its buffers back before TLS
   }
   display.begin();
-  showProgress(0, 1);
+  gh.latest = version;
+  screen.begin(cfg.oledFlip);
+  screen.setLang(cfg.lang);
+  screen.text("Update " + version, T(S_CONNECT), "");
+  ledProgress(0, 1);
   WiFi.mode(WIFI_STA);
   WiFi.begin();  // credentials saved by WiFiManager
   uint32_t t0 = millis();
@@ -430,6 +491,10 @@ void setup() {
   if (!rescue) cfg.load();
   display.begin();
   display.setLimit(cfg.limitMa);
+  screen.begin(cfg.oledFlip);
+  screen.setLang(cfg.lang);
+  screen.text(FW_NAME " " FW_VERSION, T(S_CONNECT), "");
+  Update.onProgress([](size_t done, size_t total) { uploadProgress(done, total); });
   randomSeed(RANDOM_REG32);
 
   configTime(cfg.tz.c_str(), cfg.ntp.c_str(), "pool.ntp.org");
@@ -467,7 +532,7 @@ void loop() {
   if (rescue) {
     server.handleClient();
     MDNS.update();
-    if (millis() - lastTick > 30) { lastTick = millis(); statusPulse(0xFF0000); }
+    if (millis() - lastTick > 30) { lastTick = millis(); statusPulse(0xFF0000); screenLoop(); }
     display.loop();
     return;
   }
@@ -496,5 +561,7 @@ void loop() {
   }
 
   if (millis() - lastTick > 30) { lastTick = millis(); tick(); }
+  static uint32_t lastScreen = 0;
+  if (millis() - lastScreen > 250) { lastScreen = millis(); screenLoop(); }
   display.loop();
 }

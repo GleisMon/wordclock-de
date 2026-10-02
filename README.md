@@ -11,6 +11,8 @@ gesteuert von einem **Lolin NodeMCU v3 (ESP8266)**, der unsichtbar im Ständer s
 - Einstellungsseite im Browser: **http://wortuhr.local** (Deutsch / Русский / English)
 - Updates über WLAN direkt aus GitHub Releases, signiert; Rettungsmodus falls etwas schiefgeht
 - Strombegrenzung für ein 2-A-USB-Netzteil
+- Optional: kleiner Bildschirm (0,91" OLED) im Ständer – zeigt Adresse, WLAN-Einrichtung, Fehler,
+  Update-Fortschritt und auf Wunsch die genaue Uhrzeit
 
 ## Erste Inbetriebnahme
 
@@ -48,6 +50,21 @@ weiter die Zeit an.
 „MINUTEN“ lässt sich abschalten, die Varianten für :20 / :40 und „ES IST nur zur vollen und halben Stunde“
 stehen unter *Erweiterte Einstellungen*.
 
+## Bildschirm im Ständer (optional)
+
+Wird beim Start automatisch erkannt – ohne Bildschirm läuft dieselbe Firmware unverändert.
+
+| Situation | Anzeige |
+|---|---|
+| WLAN-Einrichtung | „WLAN einrichten: Wortuhr-Setup · 192.168.4.1“ (solange das Portal offen ist) |
+| nach dem Einschalten | IP-Adresse, wortuhr.local und Uhrzeit – für die eingestellte Zeit (Standard 5 min, 0 = aus, „immer“) |
+| danach | aus (Standard) oder **genaue Uhrzeit** (gedimmt, wandert gegen Einbrennen) |
+| Fehler | „Kein WLAN“, „Keine Uhrzeit“, „Update fehlgeschlagen“ |
+| Update | Fortschrittsbalken mit Prozent (GitHub, Browser-Upload, Arduino-OTA) |
+| Nachtmodus | aus (Fehler werden gedimmt angezeigt) |
+
+Einstellungen: *Bildschirm im Ständer* auf der Einstellungsseite (erscheint nur mit Bildschirm), dort auch „Bildschirm drehen“.
+
 ## Updates
 
 Die Uhr schaut einmal am Tag nach, ob es auf GitHub eine neue Version gibt, und zeigt sie auf der
@@ -63,7 +80,8 @@ aus dem neuesten [Release](https://github.com/GleisMon/wordclock-de/releases) ho
 | Teil | Hinweis |
 |---|---|
 | Gehäuse + Front | [`hardware/clock-case`](hardware/clock-case) – deutsches Layout von KS, Remix der Word Clock von johniak |
-| Ständer | [`hardware/stand`](hardware/stand) – versteckt den NodeMCU, wird mit den zwei unteren Gehäuseschrauben befestigt |
+| Ständer | [`hardware/stand`](hardware/stand) – versteckt den NodeMCU, wird mit den zwei unteren Gehäuseschrauben befestigt (v4 ohne, v5 mit Bildschirmfenster) |
+| Bildschirm (optional) | SSD1306 0,91" 128×32, I2C 0x3C: **SDA → D2 (GPIO4), SCL → D1 (GPIO5)**, VCC 3,3 V, GND |
 | Controller | Lolin NodeMCU v3 (ESP8266, 4 MB Flash) |
 | LEDs | WS2812B-Streifen 74 LED/m, 11 Reihen × 12, Schlangenlinie, Anfang unten rechts |
 | Strom | 5 V / 2 A USB-Netzteil über USB-C-Einbaubuchse (nur Strom) |
@@ -78,7 +96,7 @@ Arduino-CLI, Board **NodeMCU 1.0 (ESP-12E)**, Flash-Layout **4MB (FS:1MB OTA:~10
 
 ```bash
 arduino-cli core install esp8266:esp8266@3.1.2
-arduino-cli lib install "NeoPixelBus by Makuna@2.8.4" "WiFiManager@2.0.17" "ArduinoJson@7.4.3"
+arduino-cli lib install "NeoPixelBus by Makuna@2.8.4" "WiFiManager@2.0.17" "ArduinoJson@7.4.3" "U8g2@2.36.19"
 arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:eesz=4M1M,xtal=160,ip=lm2f,ssl=all --output-dir build firmware/Wortuhr
 ```
 
