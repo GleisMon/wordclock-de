@@ -79,7 +79,7 @@ Arduino-CLI, Board **NodeMCU 1.0 (ESP-12E)**, Flash-Layout **4MB (FS:1MB OTA:~10
 ```bash
 arduino-cli core install esp8266:esp8266@3.1.2
 arduino-cli lib install "NeoPixelBus by Makuna@2.8.4" "WiFiManager@2.0.17" "ArduinoJson@7.4.3"
-arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:eesz=4M1M,xtal=80,ip=lm2f,ssl=all --output-dir build firmware/Wortuhr
+arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:eesz=4M1M,xtal=160,ip=lm2f,ssl=all --output-dir build firmware/Wortuhr
 ```
 
 - **Signatur:** `firmware/Wortuhr/public.key` ist eingebaut; die Firmware akzeptiert per OTA/Upload nur

@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  FQBN: esp8266:esp8266:nodemcuv2:eesz=4M1M,xtal=80,ip=lm2f,ssl=all
+  FQBN: esp8266:esp8266:nodemcuv2:eesz=4M1M,xtal=160,ip=lm2f,ssl=all
 
 jobs:
   firmware:

@@ -39,7 +39,9 @@ struct GhUpdate {
     http.setTimeout(10000);
     if (!http.begin(*client, "https://github.com/" FW_REPO "/releases/latest/download/version.json")) { error = "begin"; return false; }
     heapAtConnect = ESP.getFreeHeap();
+    ESP.wdtDisable();  // RSA-4096 chain check (ISRG X1) outlasts the 3 s soft WDT; HW WDT still armed
     int code = http.GET();
+    ESP.wdtEnable(0);
     if (code != HTTP_CODE_OK) { error = code < 0 ? http.errorToString(code) + sslError(*client) : "HTTP " + String(code); http.end(); return false; }
     JsonDocument doc;
     DeserializationError e = deserializeJson(doc, http.getString());
@@ -60,7 +62,9 @@ struct GhUpdate {
     ESPhttpUpdate.onProgress(progress);
     String url = "https://github.com/" FW_REPO "/releases/download/v" + latest + "/" FW_ASSET;
     heapAtConnect = ESP.getFreeHeap();
+    ESP.wdtDisable();
     t_httpUpdate_return r = ESPhttpUpdate.update(*client, url);
+    ESP.wdtEnable(0);
     if (r != HTTP_UPDATE_OK) { error = ESPhttpUpdate.getLastErrorString() + sslError(*client); return false; }
     return true;
   }

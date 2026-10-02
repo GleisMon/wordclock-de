@@ -65,7 +65,9 @@ void clearBootCounter() {
 // without web server / mDNS / OTA / portal. Request and result travel through RTC memory.
 struct RtcText { uint32_t magic; char text[64]; };
 static const uint32_t RTC_UPD_REQ = 0x55504451, RTC_UPD_RES = 0x55504452;
-static const uint32_t RTC_OFS_REQ = 2, RTC_OFS_RES = 2 + sizeof(RtcText) / 4;
+static const uint32_t RTC_OFS_REQ = 2, RTC_OFS_RES = 2 + sizeof(RtcText) / 4, RTC_OFS_CHK = 2 + 2 * sizeof(RtcText) / 4;
+static const uint32_t RTC_CHECKING = 0x43484B31;  // set while a version check runs; survives a crash
+bool autoCheckBlocked = false;
 
 void rtcPut(uint32_t ofs, uint32_t magic, const String &s) {
   RtcText r = {magic, {0}};
@@ -398,6 +400,12 @@ void setup() {
   String updVersion, updResult;
   if (rtcTake(RTC_OFS_REQ, RTC_UPD_REQ, updVersion)) runUpdateBoot(updVersion);  // never returns
   if (rtcTake(RTC_OFS_RES, RTC_UPD_RES, updResult)) { gh.error = "Update: " + updResult; gh.checked = true; }
+  String crashed;
+  if (rtcTake(RTC_OFS_CHK, RTC_CHECKING, crashed)) {  // last boot died inside a check: no auto-check this time
+    autoCheckBlocked = true;
+    gh.error = "Update-Prüfung abgestürzt";
+    gh.checked = true;
+  }
   rescue = bumpBootCounter() >= 3;
   if (!LittleFS.begin()) { LittleFS.format(); LittleFS.begin(); }
   if (!rescue) cfg.load();
@@ -451,11 +459,13 @@ void loop() {
 
   if (saveAt && millis() > saveAt) { cfg.save(); saveAt = 0; }
 
-  if (servicesUp && (pendingCheck || (nextCheckAt && millis() > nextCheckAt))) {
+  if (servicesUp && (pendingCheck || (!autoCheckBlocked && nextCheckAt && millis() > nextCheckAt))) {
     pendingCheck = false;
     nextCheckAt = millis() + 24UL * 3600 * 1000;
-    MDNS.end();  // a TLS session with 16 KB records needs every free byte
+    MDNS.end();  // TLS needs every free byte
+    rtcPut(RTC_OFS_CHK, RTC_CHECKING, "");
     gh.check();
+    String dummy; rtcTake(RTC_OFS_CHK, RTC_CHECKING, dummy);
     MDNS.begin(HOSTNAME);
     MDNS.addService("http", "tcp", 80);
     Serial.printf("[upd] latest=%s err=%s heap@connect=%u heap=%u\n", gh.latest.c_str(), gh.error.c_str(), gh.heapAtConnect, ESP.getFreeHeap());
