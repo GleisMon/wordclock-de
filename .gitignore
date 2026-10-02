@@ -1,0 +1,7 @@
+firmware/Wortuhr/private.key
+*.key.bak
+build/
+.vscode/
+build.log
+upload.log
+serial.log
