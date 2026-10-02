@@ -1,7 +1,7 @@
 #pragma once
-// Root CAs for the GitHub release download (github.com: Sectigo/USERTrust, asset CDN: ISRG/Let's Encrypt).
-// Taken from the Mozilla CA bundle; regenerate with tools/make_certs.py if GitHub changes its CAs.
-static const char GH_ROOT_CAS[] PROGMEM = R"PEM(
+// Root CAs for the GitHub update download; regenerate with tools/make_certs.py if GitHub changes its CAs.
+// Taken from the Mozilla CA bundle.
+static const char GH_CA_GITHUB[] PROGMEM = R"PEM(
 -----BEGIN CERTIFICATE-----
 MIICjzCCAhWgAwIBAgIQXIuZxVqUxdJxVt7NiYDMJjAKBggqhkjOPQQDAzCBiDEL
 MAkGA1UEBhMCVVMxEzARBgNVBAgTCk5ldyBKZXJzZXkxFDASBgNVBAcTC0plcnNl
@@ -32,6 +32,8 @@ Af8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAwNnADBkAjAn7qRa
 qCG76UeXlImldCBteU/IvZNeWBj7LRoAasm4PdCkT0RHlAFWovgzJQxC36oCMB3q
 4S6ILuH5px0CMk7yn2xVdOOurvulGu7t0vzCAxHrRVxgED1cf5kDW21USAGKcw==
 -----END CERTIFICATE-----
+)PEM";
+static const char GH_CA_ASSETS[] PROGMEM = R"PEM(
 -----BEGIN CERTIFICATE-----
 MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
 TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh

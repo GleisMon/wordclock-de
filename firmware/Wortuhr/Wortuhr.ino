@@ -225,6 +225,7 @@ void handleState() {
   st["updAvail"] = gh.available();
   st["updErr"] = gh.error;
   st["updHeap"] = gh.heapAtConnect;
+  st["updBlock"] = gh.blockAtConnect;
   String out;
   serializeJson(doc, out);
   server.send(200, "application/json", out);
@@ -331,6 +332,16 @@ void wifiLoop() {
 
 void installUpdate() {  // normal mode: hand over to the update boot
   if (!gh.available()) return;
+  MDNS.end();
+  String url;
+  bool ok = gh.assetUrl(url);  // follow github.com's redirects here, the update boot only talks to the CDN
+  MDNS.begin(HOSTNAME);
+  MDNS.addService("http", "tcp", 80);
+  if (!ok) { Serial.printf("[upd] resolve failed: %s\n", gh.error.c_str()); return; }
+  File f = LittleFS.open("/upd.url", "w");
+  if (!f) { gh.error = "fs"; return; }
+  f.print(url);
+  f.close();
   Serial.printf("[upd] rebooting to install %s\n", gh.latest.c_str());
   if (saveAt) cfg.save();
   rtcPut(RTC_OFS_REQ, RTC_UPD_REQ, gh.latest);
@@ -347,6 +358,13 @@ void showProgress(int done, int total) {
 void runUpdateBoot(const String &version) {
   clearBootCounter();  // a deliberate reboot, not a crash
   Serial.printf("[upd] update boot -> %s\n", version.c_str());
+  String url;
+  if (LittleFS.begin()) {
+    File f = LittleFS.open("/upd.url", "r");
+    if (f) { url = f.readString(); f.close(); }
+    LittleFS.remove("/upd.url");
+    LittleFS.end();  // give its buffers back before TLS
+  }
   display.begin();
   showProgress(0, 1);
   WiFi.mode(WIFI_STA);
@@ -357,12 +375,13 @@ void runUpdateBoot(const String &version) {
   t0 = millis();
   while (time(nullptr) < 1700000000 && millis() - t0 < 30000) { delay(100); statusPulse(0x0040FF); display.loop(); }
   gh.latest = version;
-  if (WiFi.status() != WL_CONNECTED) gh.error = "no WiFi";
+  if (!url.startsWith("https://")) gh.error = "no URL";
+  else if (WiFi.status() != WL_CONNECTED) gh.error = "no WiFi";
   else {
-    Serial.printf("[upd] heap before download %u\n", ESP.getFreeHeap());
-    gh.install(showProgress);  // reboots on success
+    Serial.printf("[upd] heap before download %u (max block %u)\n", ESP.getFreeHeap(), ESP.getMaxFreeBlockSize());
+    gh.install(url, showProgress);  // reboots on success
   }
-  Serial.printf("[upd] failed: %s heap@connect=%u\n", gh.error.c_str(), gh.heapAtConnect);
+  Serial.printf("[upd] failed: %s heap@connect=%u block=%u\n", gh.error.c_str(), gh.heapAtConnect, gh.blockAtConnect);
   rtcPut(RTC_OFS_RES, RTC_UPD_RES, gh.error);
   delay(50);
   ESP.restart();
@@ -468,7 +487,7 @@ void loop() {
     String dummy; rtcTake(RTC_OFS_CHK, RTC_CHECKING, dummy);
     MDNS.begin(HOSTNAME);
     MDNS.addService("http", "tcp", 80);
-    Serial.printf("[upd] latest=%s err=%s heap@connect=%u heap=%u\n", gh.latest.c_str(), gh.error.c_str(), gh.heapAtConnect, ESP.getFreeHeap());
+    Serial.printf("[upd] latest=%s err=%s heap@connect=%u block=%u heap=%u\n", gh.latest.c_str(), gh.error.c_str(), gh.heapAtConnect, gh.blockAtConnect, ESP.getFreeHeap());
   }
   if (servicesUp && pendingInstall) { pendingInstall = false; installUpdate(); }
   if (servicesUp && cfg.autoUpdate && gh.available() && millis() - lastAutoTry > 3600000UL) {
