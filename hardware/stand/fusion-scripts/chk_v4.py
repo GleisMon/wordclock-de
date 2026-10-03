@@ -40,7 +40,7 @@ def run(_context: str):
         'NodeMCU upright 58x31x10 (0)': box(0.5, 10.5, 0.2, 31.2, -29, 29),
         'NodeMCU upright 60x33x12 (0)': box(0.3, 12.3, 0.1, 33.1, -30, 30),
         'NodeMCU upright 58x31x14 (0)': box(0.5, 14.5, 0.2, 31.2, -29, 29),
-        'socket body 14x5.2, 15 deep (0)': box(SOCK_N - 7.0, SOCK_N + 7.0, SOCK_U - 2.6, SOCK_U + 2.6, Z_IN + END_T - 15, Z_IN + END_T + 0.5),
+        'socket body 13.9x5.2 (snug), 15 deep (0)': box(SOCK_N - 6.95, SOCK_N + 6.95, SOCK_U - 2.6, SOCK_U + 2.6, Z_IN + END_T - 15, Z_IN + END_T + 0.5),
         'clip room 19x7 behind 1.5 panel (0)': box(SOCK_N - 9.5, SOCK_N + 9.5, SOCK_U - 3.5, SOCK_U + 3.5, Z_IN - 6, Z_IN + END_T - PANEL_T - 0.02),
         'panel 1.5 around hole (>0)': box(SOCK_N - 10, SOCK_N + 10, SOCK_U - 3.5, SOCK_U + 3.5, Z_IN + END_T - PANEL_T + 0.05, Z_IN + END_T - 0.05),
         'LED wire corridor n 0..8 at the socket end (0)': box(0.05, 8.0, 16.6, 29.8, CLOCK_W / 2 - 9.2, Z_IN - 0.05),

@@ -7,7 +7,7 @@
 > Vor dem Druck die eigene Uhr nachmessen und zuerst `wortuhr-stand_v9_testslice.stl` (22-mm-Endstück) anprobieren.
 
 - `wortuhr-stand_v9.stl` / `.step` – große Uhr (60 LED/m), mit OLED-Fenster wie v5; Länge 230,78 mm (bündig mit der Uhr). USB-C-Ausschnitt rechteckig
-  14,2 × 5,9 mm, symmetrisch (Buchse 14 × 5,2; die runde 5,3-mm-Variante passte nicht), 2,5 mm tiefer als in v7 und weiter hinten, ganz über dem Schraubenblock (keine Aussparung im Block → keine
+  13,9 × 5,9 mm, symmetrisch (Buchse 14 × 5,2, in der Breite stramm; die runde 5,3-mm-Variante passte nicht), 2,5 mm tiefer als in v7 und weiter hinten, ganz über dem Schraubenblock (keine Aussparung im Block → keine
   Überhänge beim Druck mit dem Bildschirm nach unten); Übergang Boden → Auflage als gerade Fase 2 mm auf 6 mm; OLED-Tasche mit 2-mm-Rand innen
   (45°-Übergang in die Wand), Einstecktiefe 3,7 mm. Die STLs liegen für den Druck **Bildschirmseite nach unten**
   (schräge Rückwand auf dem Bett).

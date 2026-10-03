@@ -19,9 +19,9 @@ END_T = 3.0
 HOLE_U, HOLE_Z = 6.995 * SCALE60, 86.56 * SCALE60   # hole centres 8.63 above the bottom edge, 213.5 apart (8.63 from the side)
 BLOCK_Z0, BLOCK_U = HOLE_Z - 8.5, 15.0  # solid screw blocks at the ends (counterbore top u=12.3)
 D_THRU, D_CB = 4.2, 6.6
-# USB-C panel socket (body 14 x 5.2, measured 03.10): symmetric rectangular cutout +0.2 / +0.7 (5.3 stadium did not fit);
+# USB-C panel socket (body 14 x 5.2, measured 03.10): symmetric rectangular cutout 13.9 x 5.9 (width -0.3 after a fit test, 03.10);
 # moved down/back, away from the LED wires leaving the clock at n=0, u>=16.6
-SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 15.0, 18.5, 14.2, 5.9   # body bottom 15.6 > screw block top 15: no recess in the block
+SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 15.0, 18.5, 13.9, 5.9   # body bottom 15.6 > screw block top 15: no recess in the block
 ROOF_DEG, FLANGE_N = 0.0, 16.0  # 0 = no roof: the cutout stays a symmetric rectangle (user, 03.10)
 POCKET_WN, POCKET_WU, PANEL_T = 20.0, 7.0, 1.5   # inner pocket so the clips see a 1.5 mm panel
    # panel USB-C socket 13.7 x 5.1 (+0.2) in +z end wall, long side along n
