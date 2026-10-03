@@ -1,7 +1,8 @@
 # Ständer mit verstecktem NodeMCU
 
-> **Welche Datei?** Die Word Clock gibt es in zwei Größen. **v8** passt zur großen Version (LED-Streifen
-> 60 LED/m): Uhr 230 mm breit, 17 mm dick, Schraubenlöcher 212 mm auseinander, 9 mm über der Unterkante.
+> **Welche Datei?** Die Word Clock gibt es in zwei Größen. **v9** passt zur großen Version
+> (`hardware/clock-case/word_clock_GERMAN_60LED_per_meter.3mf`, = 74-LED-Modell × 1,2333): Uhr 230,78 mm breit (Ständer genauso
+> lang, bündig), Schraubenlöcher 213,5 mm auseinander, 8,63 mm über der Unterkante und vom Seitenrand; Uhrendicke gemessen 17,2 mm.
 > **v4/v5** passen zur kleinen Version aus `hardware/clock-case` (74 LED/m): 187 mm breit, 15 mm dick, Löcher 173 mm.
 > Vor dem Druck die eigene Uhr nachmessen und zuerst `wortuhr-stand_v9_testslice.stl` (22-mm-Endstück) anprobieren.
 
