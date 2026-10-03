@@ -6,7 +6,7 @@ import adsk.core, adsk.fusion, math, os
 SCRIPT_DIR = os.environ.get('WORTUHR_STAND_DIR', '.')
 exec(open(os.path.join(SCRIPT_DIR, 'v4_build.py'), encoding='utf-8').read().split('\ndef run(')[0])
 
-LONG_PTS = [(4.06, 0.0), (52.29, 0.0)]  # table edges: front, rear (mm)
+LONG_PTS = [at_y(-CLOCK_T, 0), at_y(REAR_N, 0)]  # table edges: front, rear (mm)
 CH = 0.1        # cm, 45° edge chamfer
 CH_BLOCK = 0.6  # cm, screw-block corner
 

@@ -1,5 +1,13 @@
 # Ständer mit verstecktem NodeMCU
 
+> **Welche Datei?** Die Word Clock gibt es in zwei Größen. **v6** passt zur großen Version (LED-Streifen
+> 60 LED/m): Uhr 230 mm breit, 17 mm dick, Schraubenlöcher 213 mm auseinander, 8 mm über der Unterkante.
+> **v4/v5** passen zur kleinen Version aus `hardware/clock-case` (74 LED/m): 187 mm breit, 15 mm dick, Löcher 173 mm.
+> Vor dem Druck die eigene Uhr nachmessen und zuerst `wortuhr-stand_v6_testslice.stl` (22-mm-Endstück) anprobieren.
+
+- `wortuhr-stand_v6.stl` / `.step` – große Uhr (60 LED/m), mit OLED-Fenster wie v5; Länge 237 mm.
+- `wortuhr-stand_v6_testslice.stl` – rechtes Endstück (Schraubenblock, USB-C-Buchse) zum Anprobieren.
+
 - `wortuhr-stand_v5.stl` / `.step` – wie v4, zusätzlich Fenster für einen 0,91"-OLED (SSD1306 128×32) oben in der
   schrägen Rückwand: Tasche 39 × 12,2 × 1,7 mm von innen, Fenster 24 × 8,2 mm mit Fase 0,5 mm, 0,8 mm Haut,
   Wand überall 2,5 mm (kein Rahmen; das Modul steht innen ~0,8 mm über). Maße aus dem Reflex-Deckel.
@@ -10,7 +18,7 @@
 - `wortuhr-stand_v4.step` – zum Weiterbearbeiten
 - `fusion-scripts/` – Fusion-360-Skripte, die das Modell erzeugen (`v4_build.py`, `v5_chamfer.py`, `v5_screen.py`) und die Passung prüfen (`chk_v4.py`, `chk_v5.py`)
 
-**Maße:** 194 × 50 × 56 mm, Uhr 10° nach hinten geneigt, Vorderseite bündig mit der Front der Uhr.
+**Maße (v4/v5):** 194 × 50 × 56 mm; v6: 237 × 53 × 56 mm. Die Fusion-Skripte erzeugen v6 (Konstanten oben in `v4_build.py`), Uhr 10° nach hinten geneigt, Vorderseite bündig mit der Front der Uhr.
 
 **Befestigung:** zwei Schrauben Ø 3,7 × 40 mm (Kopf Ø 5,9 × 2 mm) durch den Ständer in die beiden unteren
 Löcher der Uhr. Klemmlänge 30 mm (Rückseite der Uhr bis Senkungsboden), Senkung Ø 6,6 × 2,5 mm,

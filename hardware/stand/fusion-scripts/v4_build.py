@@ -2,17 +2,20 @@
 import adsk.core, adsk.fusion, math
 
 TILT = 10.0
-CLOCK_T, CLOCK_W, CLR_END = 15.0, 187.12, 0.5
+# Real clock (60 LED/m version, measured 03.10): 230 wide, 17 thick incl. back plate,
+# holes 213 apart, 8 mm above the bottom edge. (The 74 LED/m 3MF is 187.12 x 15, holes 173.12 / 7.)
+CLOCK_T, CLOCK_W, CLR_END = 17.0, 230.0, 0.5
+CLOCK_H = 230.0                 # only for the fit check (not measured, roughly square)
 LIP_T, LIP_H = 4.0, 7.0
 CLAMP, CB_DEPTH = 30.0, 2.5
 REAR_N = CLAMP + CB_DEPTH       # 32.5: flat rear face for the screw heads
-REAR_FLAT_U = 14.0              # flat rear face up to here (counterbore reaches u=10.3)
+REAR_FLAT_U = 16.0              # flat rear face up to here (counterbore reaches u=11.3)
 TOP_U = 52.0                    # rear wall meets the clock back here
 WALL = 2.5
 FLOOR_Y = 3.0
 END_T = 3.0
-BLOCK_Z0, BLOCK_U = 78.0, 12.0  # solid screw blocks at the ends (below the LED-wire slot at u>=13.7)
-HOLE_U, HOLE_Z = 7.0, 86.56
+HOLE_U, HOLE_Z = 8.0, 106.5      # hole centres: 8 mm above the clock's bottom edge, 213 apart
+BLOCK_Z0, BLOCK_U = HOLE_Z - 8.5, 14.0  # solid screw blocks at the ends (counterbore top u=11.3)
 D_THRU, D_CB = 4.2, 6.6
 SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 11.0, 21.0, 13.9, 5.3
 POCKET_WN, POCKET_WU, PANEL_T = 20.0, 11.0, 1.5   # inner pocket so the clips see a 1.5 mm panel

@@ -9,3 +9,6 @@
 
 Inhalt: Gehäuse (187 × 179 × 12 mm) mit transparenter und weißer Frontschicht, Rückplatte 3 mm
 (Platte 2 im 3MF). Aufbauanleitung: https://github.com/johniak/word-clock/blob/main/docs/device_build.md
+
+Hinweis: Dies ist die kleine Version (74 LED/m, 187 mm). Die große Version für 60-LED/m-Streifen (230 mm) ist das Original
+von johniak; dafür passt der Ständer v6.

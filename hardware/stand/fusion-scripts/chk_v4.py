@@ -27,16 +27,16 @@ def run(_context: str):
             tb.booleanOperation(b, tb.createCylinderOrCone(P3(SOCK_N + d, SOCK_U, z0), r / 10, P3(SOCK_N + d, SOCK_U, z1), r / 10), adsk.fusion.BooleanTypes.UnionBooleanType)
         return b
     ck = {
-        'clock (want 0)': box(-15 + e, -e, e, 178.6, -93.56, 93.56),
+        'clock (want 0)': box(-CLOCK_T + e, -e, e, CLOCK_H, -CLOCK_W / 2, CLOCK_W / 2),
         'screw R (0)': cyl(0, CLAMP, HOLE_U, HOLE_Z, 3.7),
         'screw L (0)': cyl(0, CLAMP, HOLE_U, -HOLE_Z, 3.7),
         'head R (0)': cyl(CLAMP + e, CLAMP + 2, HOLE_U, HOLE_Z, 5.9),
         'head L (0)': cyl(CLAMP + e, CLAMP + 2, HOLE_U, -HOLE_Z, 5.9),
         'ring under head (>0)': cyl(CLAMP - 0.5, CLAMP - e, HOLE_U, HOLE_Z, 5.9),
         'top contact strip (>0)': box(0, 0.3, U_TOP_IN, TOP_U, -90, 90),
-        'bottom contact blocks (>0)': box(0, 0.3, 0, BLOCK_U, 80, 93),
-        'LED wire R (0)': box(e, 15, 13.7, 24.4, 86.06, 89.06),
-        'LED wire L (0)': box(e, 15, 13.7, 24.4, -89.06, -86.06),
+        'bottom contact blocks (>0)': box(0, 0.3, 0, BLOCK_U, BLOCK_Z0 + 2, Z_IN - 1),
+        'LED wire R (0)': box(e, 15, 16.9, 30.0, CLOCK_W / 2 - 9.2, CLOCK_W / 2 - 5.5),
+        'LED wire L (0)': box(e, 15, 16.9, 30.0, -CLOCK_W / 2 + 5.5, -CLOCK_W / 2 + 9.2),
         'NodeMCU upright 58x31x10 (0)': box(0.5, 10.5, 0.2, 31.2, -29, 29),
         'NodeMCU upright 60x33x12 (0)': box(0.3, 12.3, 0.1, 33.1, -30, 30),
         'NodeMCU upright 58x31x14 (0)': box(0.5, 14.5, 0.2, 31.2, -29, 29),
