@@ -31,17 +31,28 @@ public:
     on = false; last = "";
   }
 
+  // Burn-in protection: the position walks a figure-eight, one small step per minute, one lap per hour,
+  // so every pixel is lit about equally and neighbouring positions differ by only 1-2 px.
+  static void orbit(int rx, int ry, int &dx, int &dy) {
+    float a = 2 * PI * ((millis() / 60000UL) % 60) / 60.0f;
+    dx = lroundf(rx * sinf(a));
+    dy = lroundf(ry * sinf(2 * a));
+  }
+
   // Three text lines: small header, medium main line, small footer. Redraws only on change.
-  void text(const String &head, const String &main, const String &foot, uint8_t contrast = 160) {
+  // drift = shown for long (setup portal, errors, "always on"): moves +-3 px / 1 px with the orbit.
+  void text(const String &head, const String &main, const String &foot, uint8_t contrast = 160, bool drift = false) {
     if (!present) return;
-    String key = head + "\x1f" + main + "\x1f" + foot + "\x1f" + contrast;
+    int dx = 0, dy = 0;
+    if (drift) { orbit(3, 1, dx, dy); if (dy > 0) dy = 0; }   // keep the footer inside the 32 rows
+    String key = head + "\x1f" + main + "\x1f" + foot + "\x1f" + contrast + "\x1f" + dx + "," + dy;
     if (on && key == last) return;
     wake(contrast);
     u8g2.firstPage();
     do {
-      u8g2.setFont(small()); center(8, head);
-      u8g2.setFont(medium()); center(21, main);
-      u8g2.setFont(small()); center(31, foot);
+      u8g2.setFont(small()); center(8 + dy, head, dx);
+      u8g2.setFont(medium()); center(21 + dy, main, dx);
+      u8g2.setFont(small()); center(31 + dy, foot, dx);
     } while (u8g2.nextPage());
     last = key;
   }
@@ -63,17 +74,18 @@ public:
     last = key;
   }
 
-  // Exact time in large digits; drifts a few pixels every minute against OLED burn-in.
+  // Exact time in large digits (24 of 32 rows), dimmed, moving on the orbit (+-18 px, +-3 px).
   void clock(int h, int m) {
     if (!present) return;
     char b[6];
     snprintf(b, sizeof(b), "%02d:%02d", h, m);
-    String key = String("\x1e") + b;
+    int dx, dy;
+    orbit(18, 3, dx, dy);
+    String key = String("\x1e") + b + "\x1f" + dx + "," + dy;
     if (on && key == last) return;
     wake(12);
     u8g2.setFont(u8g2_font_logisoso24_tn);
     int w = u8g2.getStrWidth(b);
-    int dx = (m % 5) * 6 - 12, dy = (m / 5) % 3 - 1;
     u8g2.firstPage();
     do { u8g2.drawStr((128 - w) / 2 + dx, 28 + dy, b); } while (u8g2.nextPage());
     last = key;
@@ -86,10 +98,11 @@ private:
 
   const uint8_t *small() const { return ru ? u8g2_font_5x8_t_cyrillic : u8g2_font_5x8_tf; }
   const uint8_t *medium() const { return ru ? u8g2_font_6x13_t_cyrillic : u8g2_font_6x13_tf; }
-  void center(int y, const String &s) {
+  void center(int y, const String &s, int dx = 0) {
     if (!s.length()) return;
     int w = u8g2.getUTF8Width(s.c_str());
-    u8g2.drawUTF8(w >= 128 ? 0 : (128 - w) / 2, y, s.c_str());
+    int x = w >= 128 ? 0 : (128 - w) / 2 + dx;
+    u8g2.drawUTF8(constrain(x, 0, max(0, 128 - w)), y, s.c_str());
   }
   void wake(uint8_t contrast) {
     if (!on) { u8g2.setPowerSave(0); on = true; }

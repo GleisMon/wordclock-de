@@ -218,22 +218,25 @@ void tick() {
 // ---------- stand display: what to show, most important first ----------
 void screenLoop() {
   if (!screen.present) return;
-  if (rescue) { screen.text(T(S_RESCUE), AP_RESCUE, "192.168.4.1/update"); return; }
-  if (portalOn) { screen.text(T(S_SETUP), AP_SETUP, "192.168.4.1"); return; }
+  // screens that can stay up for long drift on the burn-in orbit (see Screen::orbit)
+  if (rescue) { screen.text(T(S_RESCUE), AP_RESCUE, "192.168.4.1/update", 160, true); return; }
+  if (portalOn) { screen.text(T(S_SETUP), AP_SETUP, "192.168.4.1", 160, true); return; }
   time_t now = time(nullptr);
   bool valid = now > 1700000000, up = WiFi.status() == WL_CONNECTED;
   struct tm t = {};
   if (valid) localtime_r(&now, &t);
   bool night = valid && inNight(t.tm_hour * 60 + t.tm_min);
-  if (!up && lostSince && millis() - lostSince > 20000) { screen.text(T(S_NOWIFI), WiFi.SSID(), T(S_RETRY), night ? 12 : 160); return; }
-  if (up && !valid && millis() > 60000) { screen.text(T(S_NOTIME), "NTP", cfg.ntp, night ? 12 : 160); return; }
-  bool infoTime = cfg.oledMin == 255 || millis() < cfg.oledMin * 60000UL;
+  if (!up && lostSince && millis() - lostSince > 20000) { screen.text(T(S_NOWIFI), WiFi.SSID(), T(S_RETRY), night ? 12 : 160, true); return; }
+  if (up && !valid && millis() > 60000) { screen.text(T(S_NOTIME), "NTP", cfg.ntp, night ? 12 : 160, true); return; }
+  bool always = cfg.oledMin == 255;
+  bool infoTime = always || millis() < cfg.oledMin * 60000UL;
+  if (valid && t.tm_min == 0 && t.tm_sec < 2 && (always || cfg.oledAfter == 1)) { screen.off(); return; }  // 2 s rest each hour
   if (infoTime && !night) {
     String foot = "wortuhr.local";
     if (gh.error.startsWith("Update")) foot = T(S_UPDFAIL);
     else if (gh.available()) foot = T(S_UPDAVAIL) + gh.latest;
     else if (valid) { char b[8]; snprintf(b, sizeof(b), "  %02d:%02d", t.tm_hour, t.tm_min); foot += b; }
-    screen.text(T(S_WEB), up ? WiFi.localIP().toString() : T(S_CONNECT), foot);
+    screen.text(T(S_WEB), up ? WiFi.localIP().toString() : T(S_CONNECT), foot, 160, always);
     return;
   }
   if (cfg.oledAfter == 1 && valid && !night) { screen.clock(t.tm_hour, t.tm_min); return; }

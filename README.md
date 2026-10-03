@@ -58,7 +58,7 @@ Wird beim Start automatisch erkannt – ohne Bildschirm läuft dieselbe Firmware
 |---|---|
 | WLAN-Einrichtung | „WLAN einrichten: Wortuhr-Setup · 192.168.4.1“ (solange das Portal offen ist) |
 | nach dem Einschalten | IP-Adresse, wortuhr.local und Uhrzeit – für die eingestellte Zeit (Standard 5 min, 0 = aus, „immer“) |
-| danach | aus (Standard) oder **genaue Uhrzeit** (gedimmt, wandert gegen Einbrennen) |
+| danach | aus (Standard) oder **genaue Uhrzeit** (gedimmt, wandert auf einer Acht-Bahn gegen Einbrennen: 1 Schritt/min, 1 Runde/h) |
 | Fehler | „Kein WLAN“, „Keine Uhrzeit“, „Update fehlgeschlagen“ |
 | Update | Fortschrittsbalken mit Prozent (GitHub, Browser-Upload, Arduino-OTA) |
 | Nachtmodus | aus (Fehler werden gedimmt angezeigt) |
