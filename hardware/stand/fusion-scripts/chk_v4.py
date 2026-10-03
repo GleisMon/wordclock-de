@@ -40,9 +40,10 @@ def run(_context: str):
         'NodeMCU upright 58x31x10 (0)': box(0.5, 10.5, 0.2, 31.2, -29, 29),
         'NodeMCU upright 60x33x12 (0)': box(0.3, 12.3, 0.1, 33.1, -30, 30),
         'NodeMCU upright 58x31x14 (0)': box(0.5, 14.5, 0.2, 31.2, -29, 29),
-        'socket body stadium 13.7x5.1, 15 deep (0)': stad(13.7, 5.1, Z_IN + END_T - 15, Z_IN + END_T + 0.5),
-        'clip room 19x10 behind 1.5 panel (0)': box(SOCK_N - 9.5, SOCK_N + 9.5, SOCK_U - 5, SOCK_U + 5, Z_IN - 6, Z_IN + END_T - PANEL_T - 0.02),
+        'socket body 13.7x5.1, 15 deep (0)': box(SOCK_N - 6.85, SOCK_N + 6.85, SOCK_U - 2.55, SOCK_U + 2.55, Z_IN + END_T - 15, Z_IN + END_T + 0.5),
+        'clip room 19x7 behind 1.5 panel (0)': box(SOCK_N - 9.5, SOCK_N + 9.5, SOCK_U - 3.5, SOCK_U + 3.5, Z_IN - 6, Z_IN + END_T - PANEL_T - 0.02),
         'panel 1.5 around hole (>0, ~ (20*11 - hole)*1.4)': box(SOCK_N - 10, SOCK_N + 10, SOCK_U - 5.5, SOCK_U + 5.5, Z_IN + END_T - PANEL_T + 0.05, Z_IN + END_T - 0.05),
+        'LED wire corridor n 0..9 at the socket end (0)': box(0.05, 9.5, 16.6, 29.8, CLOCK_W / 2 - 9.2, Z_IN - 0.05),
         'socket flange 16x9 outside (0)': box(SOCK_N - 8, SOCK_N + 8, SOCK_U - 4.5, SOCK_U + 4.5, Z_IN + END_T + 0.02, Z_IN + END_T + 2),
         'flange seat on end face (>0)': box(SOCK_N - 8, SOCK_N + 8, SOCK_U - 4.5, SOCK_U + 4.5, Z_IN + END_T - 0.3, Z_IN + END_T - 0.02),
     }

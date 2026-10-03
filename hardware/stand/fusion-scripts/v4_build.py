@@ -17,7 +17,10 @@ END_T = 3.0
 HOLE_U, HOLE_Z = 9.0, 106.0      # hole centres: 9 mm above the clock's bottom edge, 212 apart
 BLOCK_Z0, BLOCK_U = HOLE_Z - 8.5, 15.0  # solid screw blocks at the ends (counterbore top u=12.3)
 D_THRU, D_CB = 4.2, 6.6
-SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 11.0, 21.0, 13.9, 5.3
+# USB-C panel socket (body 13.7 x 5.1): rectangular cutout, height +0.7 for FDM (5.3 stadium did not fit, 03.10);
+# moved down/back, away from the LED wires leaving the clock at n=0, u>=16.6
+SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 16.0, 16.5, 13.9, 5.8
+BAY_U0 = 13.0                   # recess in the screw block for socket body + clips (screw hole top at u=11.1)
 POCKET_WN, POCKET_WU, PANEL_T = 20.0, 11.0, 1.5   # inner pocket so the clips see a 1.5 mm panel
    # panel USB-C socket 13.7 x 5.1 (+0.2) in +z end wall, long side along n
 YB = 5.0
@@ -75,7 +78,13 @@ def run(_context: str):
     body = ext.add(ei).bodies.item(0); body.name = 'Stand_v4'
 
     B = g(0, 0)
-    inner = [B, (B[0], FLOOR_Y), at_y(N_IN, FLOOR_Y), g(N_IN, U_CORNER), g(0, U_TOP_IN)]
+    # floor -> clock seat edge: R5 arc tangent to the floor instead of a 2 mm vertical step (printing, 03.10)
+    R_STEP = 5.0
+    hgt = B[1] - FLOOR_Y
+    cx = B[0] + math.sqrt(R_STEP ** 2 - (R_STEP - hgt) ** 2)
+    a0 = math.atan2(B[1] - (FLOOR_Y + R_STEP), B[0] - cx)
+    arc = [(cx + R_STEP * math.cos(a0 + (-math.pi / 2 - a0) * k / 8), FLOOR_Y + R_STEP + R_STEP * math.sin(a0 + (-math.pi / 2 - a0) * k / 8)) for k in range(1, 9)]
+    inner = [B] + arc + [at_y(N_IN, FLOOR_Y), g(N_IN, U_CORNER), g(0, U_TOP_IN)]
     sk = poly(inner, 'v4_cavity')
     ei = ext.createInput(sk.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     ei.setSymmetricExtent(VI(2 * Z_IN / 10), True)
@@ -111,10 +120,8 @@ def run(_context: str):
     for zs in (HOLE_Z, -HOLE_Z):
         add(cyl(-1.0, REAR_N + 2, HOLE_U, zs, D_THRU))
         add(cyl(CLAMP, REAR_N + 2, HOLE_U, zs, D_CB))
-    r = SOCK_WU / 2   # stadium, long side along n
-    add(box(SOCK_N - SOCK_WN / 2 + r, SOCK_N + SOCK_WN / 2 - r, SOCK_U - r, SOCK_U + r, Z_IN - 1, Z_IN + END_T + 1))
-    for dn_ in (-(SOCK_WN / 2 - r), SOCK_WN / 2 - r):
-        add(tb.createCylinderOrCone(P3(SOCK_N + dn_, SOCK_U, Z_IN - 1), r / 10, P3(SOCK_N + dn_, SOCK_U, Z_IN + END_T + 1), r / 10))
+    add(box(SOCK_N - SOCK_WN / 2, SOCK_N + SOCK_WN / 2, SOCK_U - SOCK_WU / 2, SOCK_U + SOCK_WU / 2, Z_IN - 1, Z_IN + END_T + 1))
+    add(box(SOCK_N - 10.5, SOCK_N + 10.5, BAY_U0, BLOCK_U + 1, Z_IN - 17, Z_IN + 0.05))  # bay in the +z screw block
     add(box(SOCK_N - POCKET_WN / 2, SOCK_N + POCKET_WN / 2, SOCK_U - POCKET_WU / 2, SOCK_U + POCKET_WU / 2, Z_IN - 0.1, Z_IN + END_T - PANEL_T))
     bf = root.features.baseFeatures.add(); bf.startEdit()
     root.bRepBodies.add(cut, bf); bf.finishEdit(); bf.name = 'v4_cutters'
