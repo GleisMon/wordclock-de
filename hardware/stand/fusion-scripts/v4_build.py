@@ -19,10 +19,9 @@ BLOCK_Z0, BLOCK_U = HOLE_Z - 8.5, 15.0  # solid screw blocks at the ends (counte
 D_THRU, D_CB = 4.2, 6.6
 # USB-C panel socket (body 13.7 x 5.1): rectangular cutout, height +0.7 for FDM (5.3 stadium did not fit, 03.10);
 # moved down/back, away from the LED wires leaving the clock at n=0, u>=16.6
-SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 16.0, 16.5, 13.9, 5.8
-BAY_U0 = 13.0                   # recess in the screw block for socket body + clips (screw hole top at u=11.1)
+SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 15.0, 18.5, 13.9, 5.8   # body bottom 15.6 > screw block top 15: no recess in the block
 ROOF_DEG, FLANGE_N = 50.0, 16.0 # printable roof on the cutout (print orientation: OLED window down); flange width along n
-POCKET_WN, POCKET_WU, PANEL_T = 20.0, 11.0, 1.5   # inner pocket so the clips see a 1.5 mm panel
+POCKET_WN, POCKET_WU, PANEL_T = 20.0, 7.0, 1.5   # inner pocket so the clips see a 1.5 mm panel
    # panel USB-C socket 13.7 x 5.1 (+0.2) in +z end wall, long side along n
 YB = 5.0
 
@@ -122,7 +121,6 @@ def run(_context: str):
         add(cyl(-1.0, REAR_N + 2, HOLE_U, zs, D_THRU))
         add(cyl(CLAMP, REAR_N + 2, HOLE_U, zs, D_CB))
     add(box(SOCK_N - SOCK_WN / 2, SOCK_N + SOCK_WN / 2, SOCK_U - SOCK_WU / 2, SOCK_U + SOCK_WU / 2, Z_IN - 1, Z_IN + END_T + 1))
-    add(box(SOCK_N - 10.5, SOCK_N + 10.5, BAY_U0, BLOCK_U + 1, Z_IN - 17, Z_IN + 0.05))  # bay in the +z screw block
     add(box(SOCK_N - POCKET_WN / 2, SOCK_N + POCKET_WN / 2, SOCK_U - POCKET_WU / 2, SOCK_U + POCKET_WU / 2, Z_IN - 0.1, Z_IN + END_T - PANEL_T))
     bf = root.features.baseFeatures.add(); bf.startEdit()
     root.bRepBodies.add(cut, bf); bf.finishEdit(); bf.name = 'v4_cutters'
