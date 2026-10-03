@@ -78,13 +78,9 @@ def run(_context: str):
     body = ext.add(ei).bodies.item(0); body.name = 'Stand_v4'
 
     B = g(0, 0)
-    # floor -> clock seat edge: R5 arc tangent to the floor instead of a 2 mm vertical step (printing, 03.10)
-    R_STEP = 5.0
-    hgt = B[1] - FLOOR_Y
-    cx = B[0] + math.sqrt(R_STEP ** 2 - (R_STEP - hgt) ** 2)
-    a0 = math.atan2(B[1] - (FLOOR_Y + R_STEP), B[0] - cx)
-    arc = [(cx + R_STEP * math.cos(a0 + (-math.pi / 2 - a0) * k / 8), FLOOR_Y + R_STEP + R_STEP * math.sin(a0 + (-math.pi / 2 - a0) * k / 8)) for k in range(1, 9)]
-    inner = [B] + arc + [at_y(N_IN, FLOOR_Y), g(N_IN, U_CORNER), g(0, U_TOP_IN)]
+    # floor -> clock seat edge: straight 2 mm-over-6 mm ramp instead of a vertical step (printing; R5 arc was too abrupt)
+    RAMP_L = 6.0
+    inner = [B, (B[0] + RAMP_L, FLOOR_Y), at_y(N_IN, FLOOR_Y), g(N_IN, U_CORNER), g(0, U_TOP_IN)]
     sk = poly(inner, 'v4_cavity')
     ei = ext.createInput(sk.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     ei.setSymmetricExtent(VI(2 * Z_IN / 10), True)
