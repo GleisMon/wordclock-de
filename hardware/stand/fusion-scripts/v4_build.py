@@ -17,10 +17,10 @@ END_T = 3.0
 HOLE_U, HOLE_Z = 9.0, 106.0      # hole centres: 9 mm above the clock's bottom edge, 212 apart
 BLOCK_Z0, BLOCK_U = HOLE_Z - 8.5, 15.0  # solid screw blocks at the ends (counterbore top u=12.3)
 D_THRU, D_CB = 4.2, 6.6
-# USB-C panel socket (body 13.7 x 5.1): rectangular cutout, height +0.7 for FDM (5.3 stadium did not fit, 03.10);
+# USB-C panel socket (body 14 x 5.2, measured 03.10): symmetric rectangular cutout +0.2 / +0.7 (5.3 stadium did not fit);
 # moved down/back, away from the LED wires leaving the clock at n=0, u>=16.6
-SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 15.0, 18.5, 13.9, 5.8   # body bottom 15.6 > screw block top 15: no recess in the block
-ROOF_DEG, FLANGE_N = 50.0, 16.0 # printable roof on the cutout (print orientation: OLED window down); flange width along n
+SOCK_N, SOCK_U, SOCK_WN, SOCK_WU = 15.0, 18.5, 14.2, 5.9   # body bottom 15.6 > screw block top 15: no recess in the block
+ROOF_DEG, FLANGE_N = 0.0, 16.0  # 0 = no roof: the cutout stays a symmetric rectangle (user, 03.10)
 POCKET_WN, POCKET_WU, PANEL_T = 20.0, 7.0, 1.5   # inner pocket so the clips see a 1.5 mm panel
    # panel USB-C socket 13.7 x 5.1 (+0.2) in +z end wall, long side along n
 YB = 5.0
@@ -129,34 +129,35 @@ def run(_context: str):
     ci.operation = adsk.fusion.FeatureOperations.CutFeatureOperation
     root.features.combineFeatures.add(ci)
 
-    # USB-C cutout roof: printed with the outer slope on the bed (OLED window down) the rectangle's
-    # n_min side becomes a ~42 deg ceiling -> add a triangular roof at ROOF_DEG, kept inside the flange
-    L_s = math.hypot(REAR_N, TOP_U - REAR_FLAT_U)
-    up = (-(TOP_U - REAR_FLAT_U) / L_s, -REAR_N / L_s)       # into the body when the outer slope lies on the bed
-    hz = (up[1], -up[0])
-    dot = lambda p, q: p[0] * q[0] + p[1] * q[1]
-    n0, u0, u1 = SOCK_N - SOCK_WN / 2, SOCK_U - SOCK_WU / 2, SOCK_U + SOCK_WU / 2
-    A, C = (n0, u1), (n0, u0)
-    sg = 1 if dot((C[0] - A[0], C[1] - A[1]), hz) > 0 else -1
-    a = math.radians(ROOF_DEG)
-    r = (sg * math.cos(a) * hz[0] + math.sin(a) * up[0], sg * math.cos(a) * hz[1] + math.sin(a) * up[1])
-    e = (-1.0, 0.0)                                           # extension of the u_min edge beyond C
-    det = r[0] * (-e[1]) - r[1] * (-e[0])
-    t_ = ((C[0] - A[0]) * (-e[1]) - (C[1] - A[1]) * (-e[0])) / det
-    s_ = (r[0] * (C[1] - A[1]) - r[1] * (C[0] - A[0])) / det
-    s_ = min(s_, n0 - (SOCK_N - FLANGE_N / 2 + 0.1))
-    apex = (C[0] + s_ * e[0], C[1] + s_ * e[1])
-    roof = [g(n0 + 0.5, u1), g(*A), g(*apex), g(n0 + 0.5, u0)]
-    pi = root.constructionPlanes.createInput()
-    pi.setByOffset(root.xYConstructionPlane, VI((Z_IN - 1) / 10))
-    sk = poly(roof, 'usb_roof', root.constructionPlanes.add(pi))
-    ei = ext.createInput(sk.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
-    ei.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI((END_T + 2) / 10)), adsk.fusion.ExtentDirections.PositiveExtentDirection)
-    ei.participantBodies = [body]
-    ext.add(ei).name = 'usb_roof'
-    ang = math.degrees(math.atan2(dot((apex[0] - A[0], apex[1] - A[1]), up), abs(dot((apex[0] - A[0], apex[1] - A[1]), hz))))
-    print('usb roof: apex n,u', [round(v, 2) for v in apex], 'roof angle deg', round(ang, 1),
-          'edge angles (n-dir, u-dir) deg', round(math.degrees(math.acos(abs(hz[0]))), 1), round(math.degrees(math.acos(abs(hz[1]))), 1))
+    if ROOF_DEG > 0:
+        # USB-C cutout roof: printed with the outer slope on the bed (OLED window down) the rectangle's
+        # n_min side becomes a ~42 deg ceiling -> add a triangular roof at ROOF_DEG, kept inside the flange
+        L_s = math.hypot(REAR_N, TOP_U - REAR_FLAT_U)
+        up = (-(TOP_U - REAR_FLAT_U) / L_s, -REAR_N / L_s)       # into the body when the outer slope lies on the bed
+        hz = (up[1], -up[0])
+        dot = lambda p, q: p[0] * q[0] + p[1] * q[1]
+        n0, u0, u1 = SOCK_N - SOCK_WN / 2, SOCK_U - SOCK_WU / 2, SOCK_U + SOCK_WU / 2
+        A, C = (n0, u1), (n0, u0)
+        sg = 1 if dot((C[0] - A[0], C[1] - A[1]), hz) > 0 else -1
+        a = math.radians(ROOF_DEG)
+        r = (sg * math.cos(a) * hz[0] + math.sin(a) * up[0], sg * math.cos(a) * hz[1] + math.sin(a) * up[1])
+        e = (-1.0, 0.0)                                           # extension of the u_min edge beyond C
+        det = r[0] * (-e[1]) - r[1] * (-e[0])
+        t_ = ((C[0] - A[0]) * (-e[1]) - (C[1] - A[1]) * (-e[0])) / det
+        s_ = (r[0] * (C[1] - A[1]) - r[1] * (C[0] - A[0])) / det
+        s_ = min(s_, n0 - (SOCK_N - FLANGE_N / 2 + 0.1))
+        apex = (C[0] + s_ * e[0], C[1] + s_ * e[1])
+        roof = [g(n0 + 0.5, u1), g(*A), g(*apex), g(n0 + 0.5, u0)]
+        pi = root.constructionPlanes.createInput()
+        pi.setByOffset(root.xYConstructionPlane, VI((Z_IN - 1) / 10))
+        sk = poly(roof, 'usb_roof', root.constructionPlanes.add(pi))
+        ei = ext.createInput(sk.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
+        ei.setOneSideExtent(adsk.fusion.DistanceExtentDefinition.create(VI((END_T + 2) / 10)), adsk.fusion.ExtentDirections.PositiveExtentDirection)
+        ei.participantBodies = [body]
+        ext.add(ei).name = 'usb_roof'
+        ang = math.degrees(math.atan2(dot((apex[0] - A[0], apex[1] - A[1]), up), abs(dot((apex[0] - A[0], apex[1] - A[1]), hz))))
+        print('usb roof: apex n,u', [round(v, 2) for v in apex], 'roof angle deg', round(ang, 1),
+              'edge angles (n-dir, u-dir) deg', round(math.degrees(math.acos(abs(hz[0]))), 1), round(math.degrees(math.acos(abs(hz[1]))), 1))
 
     bb = body.boundingBox
     print('U_CORNER', round(U_CORNER, 2), 'U_TOP_IN', round(U_TOP_IN, 2), 'outer', [(round(x, 2), round(y, 2)) for x, y in outer])
