@@ -2,10 +2,12 @@
 import adsk.core, adsk.fusion, math
 
 TILT = 10.0
-# Real clock (60 LED/m version, re-measured 03.10 with a precise rule): 230 wide, 17 thick incl. back plate,
-# holes 212 apart, 9 mm above the bottom edge. (The 74 LED/m 3MF is 187.12 x 15, holes 173.12 / 7.)
-CLOCK_T, CLOCK_W, CLR_END = 17.0, 230.0, 0.5
-CLOCK_H = 230.0                 # only for the fit check (not measured, roughly square)
+# Clock = word_clock_GERMAN_60LED_per_meter.3mf: the 74 LED/m model scaled 1.2333 in x/y/z.
+# Width 187.12 * 1.2333 = 230.78, height 220.28; back-plate holes +-86.56 / 6.995 mm from the bottom edge
+# -> +-106.76 (213.5 apart) / 8.63. Thickness measured on the printed clock: 17.2 (model: 18.5).
+SCALE60 = 1.2333
+CLOCK_T, CLOCK_W = 17.2, 187.12 * SCALE60
+CLOCK_H = 178.61 * SCALE60      # only for the fit check
 LIP_T, LIP_H = 4.0, 7.0
 CLAMP, CB_DEPTH = 30.0, 2.5
 REAR_N = CLAMP + CB_DEPTH       # 32.5: flat rear face for the screw heads
@@ -14,7 +16,7 @@ TOP_U = 52.0                    # rear wall meets the clock back here
 WALL = 2.5
 FLOOR_Y = 3.0
 END_T = 3.0
-HOLE_U, HOLE_Z = 9.0, 106.0      # hole centres: 9 mm above the clock's bottom edge, 212 apart
+HOLE_U, HOLE_Z = 6.995 * SCALE60, 86.56 * SCALE60   # hole centres 8.63 above the bottom edge, 213.5 apart (8.63 from the side)
 BLOCK_Z0, BLOCK_U = HOLE_Z - 8.5, 15.0  # solid screw blocks at the ends (counterbore top u=12.3)
 D_THRU, D_CB = 4.2, 6.6
 # USB-C panel socket (body 14 x 5.2, measured 03.10): symmetric rectangular cutout +0.2 / +0.7 (5.3 stadium did not fit);
@@ -28,7 +30,7 @@ YB = 5.0
 c, s = math.cos(math.radians(TILT)), math.sin(math.radians(TILT))
 u1 = -(YB + (CLOCK_T + LIP_T) * s) / c
 XB = -(-(CLOCK_T + LIP_T) * c + u1 * s)
-Z_IN = (CLOCK_W + 2 * CLR_END) / 2
+Z_IN = CLOCK_W / 2 - END_T          # stand exactly as long as the clock is wide (flush ends); end walls inside
 
 def g(n, u): return (XB + n * c + u * s, YB - n * s + u * c)
 def nu(x, y):  # inverse
@@ -74,7 +76,7 @@ def run(_context: str):
              g(0, TOP_U), g(REAR_N, REAR_FLAT_U), at_y(REAR_N, 0)]
     sk = poly(outer, 'v4_outer')
     ei = ext.createInput(sk.profiles.item(0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation)
-    ei.setSymmetricExtent(VI(2 * (Z_IN + END_T) / 10), True)
+    ei.setSymmetricExtent(VI(CLOCK_W / 10), True)
     body = ext.add(ei).bodies.item(0); body.name = 'Stand_v4'
 
     B = g(0, 0)
