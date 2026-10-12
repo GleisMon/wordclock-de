@@ -4,6 +4,8 @@ SRC = r'C:\Users\Master\Downloads\word_clock_GERMAN_60LED_per_meter.3mf'
 DST = r'D:\___Claude\_Pub\Wortuhr\word_clock_GERMAN_60LED_per_meter_FASEN.3mf'
 SCALE = 1.2333
 C = 1.0 / SCALE            # chamfer in model units (1 mm printed)
+# lower two holes (+y = bottom edge, where the LED wire slot is) for the stand screws with 4.7 mm thread
+LOWER_HOLES = [(86.56, 82.305, 5.2), (-86.56, 82.305, 5.2)]
 C_SEAM = 0.5 / SCALE       # edges where box and plate meet (plate slab is only 2.47 mm)
 
 def parse(xml, oid):
@@ -25,7 +27,7 @@ def prism(axis, lo, hi, corners):
             p = [0, 0, 0]; p[axis] = w; p[i] = a; p[j] = b; pts.append(p)
     return m3.Manifold.hull_points(np.array(pts, dtype=np.float64))
 
-def chamfer(xml, oid, name, zlo, zhi, c_zlo, c_zhi):
+def chamfer(xml, oid, name, zlo, zhi, c_zlo, c_zhi, holes=()):
     """Outer slab spans zlo..zhi; edges at zlo get c_zlo, edges at zhi get c_zhi, the four corner edges C."""
     m, v, t = parse(xml, oid)
     man = m3.Manifold(m3.Mesh(vert_properties=v.astype(np.float32), tri_verts=t))
@@ -37,6 +39,8 @@ def chamfer(xml, oid, name, zlo, zhi, c_zlo, c_zhi):
         ins = max(C, c_zhi) + 0.5
         keep += m3.Manifold.cube([hi[0] - lo[0] - 2 * ins, hi[1] - lo[1] - 2 * ins, hi[2] - zhi + 1.0]).translate([lo[0] + ins, lo[1] + ins, zhi - 0.5])
     out = man ^ keep
+    for hx, hy, d in holes:   # through holes (print-scale diameter d)
+        out -= m3.Manifold.cylinder(20.0, d / SCALE / 2, d / SCALE / 2, 64).translate([hx, hy, -10.0])
     mesh = out.to_mesh()
     nv = np.asarray(mesh.vert_properties)[:, :3]; nt = np.asarray(mesh.tri_verts)
     print(name, 'size', np.round((hi - lo) * SCALE, 2), 'verts %d->%d tris %d->%d' % (len(v), len(nv), len(t), len(nt)),
@@ -54,7 +58,7 @@ for info in zin.infolist():
     if info.filename == '3D/Objects/object_1.model':
         x, meshes['box'] = chamfer(data.decode('utf-8'), '1', 'box', -6.0, 6.0, C, C_SEAM); data = x.encode('utf-8')
     elif info.filename == '3D/Objects/object_2.model':
-        x, meshes['plate'] = chamfer(data.decode('utf-8'), '5', 'plate', -1.5, 0.5, C, C_SEAM); data = x.encode('utf-8')
+        x, meshes['plate'] = chamfer(data.decode('utf-8'), '5', 'plate', -1.5, 0.5, C, C_SEAM, LOWER_HOLES); data = x.encode('utf-8')
     zout.writestr(info.filename, data)
 zout.close()
 import pickle; pickle.dump(meshes, open('fasen_meshes.pkl', 'wb'))

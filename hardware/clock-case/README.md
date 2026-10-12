@@ -14,5 +14,5 @@ Zwei Größen, gleiche Lizenz (CC BY-SA 4.0, KS):
 - `word_clock_GERMAN_74LED_per_meter.3mf` – 187 mm breit (74-LED/m-Streifen)
 - `word_clock_GERMAN_60LED_per_meter_chamfered.3mf` – wie die 60-LED/m-Version, aber mit 45°-Fasen an allen Außenkanten von Gehäuse und Rückwand:
   1 mm an Front, Rückseite und den vier Ecken, 0,5 mm an der Fuge zwischen Gehäuse und Rückwand (die Rückwand ist nur 2,5 mm dick).
-  Innenleben, Buchstaben und Bohrungen unverändert; erzeugt mit `tools/chamfer_3mf.py` (Python, `manifold3d`). Passt zum Ständer v10.
+  Die zwei unteren Löcher der Rückwand sind auf 5,2 mm aufgebohrt (Ständer-Schrauben mit 4,7-mm-Gewinde, Ständer v11); Innenleben und Buchstaben unverändert; erzeugt mit `tools/chamfer_3mf.py` (Python, `manifold3d`). Passt zum Ständer v11.
 - `word_clock_GERMAN_60LED_per_meter.3mf` – dasselbe Modell × 1,2333 = 230,8 mm breit (60-LED/m-Streifen); dafür ist der Ständer v9.
