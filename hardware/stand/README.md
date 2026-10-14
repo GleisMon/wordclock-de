@@ -6,7 +6,9 @@
 > **v4/v5** passen zur kleinen Version aus `hardware/clock-case` (74 LED/m): 187 mm breit, 15 mm dick, Löcher 173 mm.
 > Vor dem Druck die eigene Uhr nachmessen und zuerst `wortuhr-stand_v9_testslice.stl` (22-mm-Endstück) anprobieren.
 
-- `wortuhr-stand_v11.stl` / `.step` / `_testslice.stl` – **aktuell**: wie v10, aber für dickere Schrauben unten: Gewinde 4,7 mm, Kopf 7,8 × 2,7 mm,
+- `wortuhr-stand_v12.stl` / `.step` / `_testslice.stl` – **aktuell**: wie v11, Ecken des USB-C-Ausschnitts mit R 1 mm verrundet
+  (Probedruck von v11 passte). `fusion-scripts/v12_usb_round.py`.
+- `wortuhr-stand_v11.stl` / `.step` / `_testslice.stl` – wie v10, aber für dickere Schrauben unten: Gewinde 4,7 mm, Kopf 7,8 × 2,7 mm,
   Gesamtlänge 42,6 mm (Durchgang 5,2, Senkung 8,4 × 3,0 mm; die Schraube greift 10,4 mm in die Uhr). Dazu gehört die Rückwand aus
   `hardware/clock-case/word_clock_GERMAN_60LED_per_meter_chamfered.3mf` (untere Löcher 5,2 mm). `fusion-scripts/v11_screws.py`.
 - `wortuhr-stand_v10.stl` / `.step` – für Schrauben 3,7 × 40 mm: wie v9, zusätzlich 1-mm-Fasen an allen übrigen Außenkanten, auch an den Kanten zur Uhr
